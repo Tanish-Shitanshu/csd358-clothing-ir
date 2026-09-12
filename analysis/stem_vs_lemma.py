@@ -37,15 +37,20 @@ def main():
     diverging_tokens = 0
 
     for doc in docs:
+        # same preprocessing as the graded pipeline, but run both stem() and
+        # lemmatize_tokens() over the identical token list so results are
+        # directly comparable term-for-term.
         tokens = remove_stopwords(normalize_and_tokenize(doc.text))
         stems = [stem(t) for t in tokens]
         lemmas = lemmatize_tokens(tokens)
 
         for tok, s, l in zip(tokens, stems, lemmas):
             total_tokens += 1
-            stem_vocab.add(s)
-            lemma_vocab.add(l)
+            stem_vocab.add(s)   # accumulate the distinct stem forms seen across the whole corpus
+            lemma_vocab.add(l)  # accumulate the distinct lemma forms seen across the whole corpus
             if s != l:
+                # record every token where the two techniques disagree, plus
+                # how often it occurs, for the divergence tables in the report
                 diverging_tokens += 1
                 divergence_counts[tok] += 1
                 divergence_examples[tok] = (s, l)

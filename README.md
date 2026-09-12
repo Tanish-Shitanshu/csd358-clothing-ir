@@ -10,6 +10,19 @@ positional index + phrase/proximity search).
 
 ## 1. How to run
 
+**Note:** if `pip install -r requirements.txt` fails with an
+"externally-managed-environment" error (common on newer Debian/Ubuntu
+and Homebrew Python installs), create a virtual environment first:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate   # on Windows: .venv\Scripts\activate
+```
+
+Then continue with the commands below as normal (the same terminal
+session, with .venv activated, for every subsequent command including
+`streamlit run app.py`).
+
 ```bash
 pip install -r requirements.txt
 

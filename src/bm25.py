@@ -84,11 +84,20 @@ def bm25_search(index: InvertedIndex, query: str, top_k: int = 10,
     for term in q_terms:
         df = index.df(term)
         if df == 0:
-            continue  # OOV term contributes 0, same graceful handling as VSM
+            # term never appears in any document (out-of-vocabulary) -- there
+            # are no postings to iterate, so it contributes nothing to any
+            # doc's score; skip rather than divide by a zero df below.
+            continue
+        # +1-smoothed idf: log-weights rare terms highly, common terms near 0,
+        # and is guaranteed non-negative even when df is close to N.
         idf = math.log((index.N - df + 0.5) / (df + 0.5) + 1)
         for docid, positions in index.postings[term].items():
             tf = len(positions)
             dl = doc_len.get(docid, 0)
+            # Length-normalization term: grows with how much longer this doc
+            # is than the corpus average (dl/avgdl), scaled by b; this is
+            # what saturates/discounts tf for long documents instead of a
+            # flat log-dampening.
             denom = tf + k1 * (1 - b + b * (dl / avgdl if avgdl else 0))
             scores[docid] += idf * (tf * (k1 + 1)) / denom if denom else 0.0
 

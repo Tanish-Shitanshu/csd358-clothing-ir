@@ -67,6 +67,9 @@ def _get_lemmatizer():
 
 
 def _wordnet_pos(treebank_tag: str) -> str:
+    # nltk.pos_tag returns Penn Treebank tags (e.g. "VBD", "JJ", "NNS"), but
+    # WordNetLemmatizer only understands its own 4 coarse POS constants, so
+    # each Treebank tag family is mapped down to the matching WordNet one.
     if treebank_tag.startswith("J"):
         return wordnet.ADJ
     if treebank_tag.startswith("V"):
@@ -82,7 +85,7 @@ def lemmatize_tokens(tokens: list[str]) -> list[str]:
     at a time) because POS tagging needs surrounding context to be
     accurate."""
     lemmatizer = _get_lemmatizer()
-    tagged = pos_tag(tokens)
+    tagged = pos_tag(tokens)  # tag the whole sequence at once so context (surrounding tokens) informs each tag
     return [lemmatizer.lemmatize(tok, pos=_wordnet_pos(tag)) for tok, tag in tagged]
 
 

@@ -30,6 +30,9 @@ class Document:
     text: str
 
 
+# Capture groups, in order: (1) docid, (2) category, (3) title, (4) text.
+# re.DOTALL lets `.` match newlines so multi-line <TEXT> bodies are captured;
+# `.*?` (non-greedy) stops at the first closing tag rather than the last.
 _DOC_RE = re.compile(
     r"<DOC>\s*"
     r"<DOCID>(.*?)</DOCID>\s*"
@@ -46,6 +49,8 @@ def load_corpus(path: str) -> list[Document]:
         raw = f.read()
     docs = []
     for m in _DOC_RE.finditer(raw):
+        # finditer walks every <DOC>...</DOC> record in the raw text in order;
+        # .strip() trims the leading/trailing whitespace left over from \s*.
         docid, category, title, text = (g.strip() for g in m.groups())
         docs.append(Document(docid=docid, category=category, title=title, text=text))
     return docs

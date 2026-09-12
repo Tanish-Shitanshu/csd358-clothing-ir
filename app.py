@@ -26,7 +26,7 @@ from positional_search import phrase_search, proximity_search
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
-@st.cache_resource
+@st.cache_resource  # build the index once per server process, not once per widget interaction/rerun
 def get_index():
     docs = load_corpus(os.path.join(ROOT, "corpus_100.txt"))
     index = InvertedIndex()
@@ -53,6 +53,9 @@ st.divider()
 
 # =========================================================================
 # MODE 1: Free-text VSM search
+# Triggered whenever the radio button selects the "Free-text" option; runs
+# lnc.ltc VSM search (and optionally BM25, for the novelty comparison
+# column) on every rerun triggered by a text/checkbox change.
 # =========================================================================
 if mode.startswith("Free-text"):
     st.subheader("Free-text ranked retrieval — lnc.ltc Vector Space Model")
@@ -86,6 +89,7 @@ if mode.startswith("Free-text"):
                 if show_bm25:
                     row["BM25 score"] = round(bm25_results.get(docid, 0.0), 4)
                 rows.append(row)
+            # renders once results is non-empty; one row per ranked (docid, score) pair
             st.dataframe(rows, use_container_width=True, hide_index=True)
 
             with st.expander("Show query preprocessing detail"):
@@ -95,6 +99,9 @@ if mode.startswith("Free-text"):
 
 # =========================================================================
 # MODE 2: Phrase / Proximity search
+# Triggered when the radio button selects the positional-index option;
+# the nested sub_mode radio then picks exact-phrase vs. WITHIN/k proximity,
+# both querying the positional index directly instead of VSM/BM25.
 # =========================================================================
 else:
     st.subheader("Positional index search")
@@ -123,6 +130,7 @@ else:
                             "Title": meta.title,
                             "Matching start position(s)": str(starts),
                         })
+                    # renders one row per document that contains the exact phrase
                     st.dataframe(rows, use_container_width=True, hide_index=True)
                     st.info(
                         "**Evidence of positional matching:** the 'Matching start "
@@ -158,6 +166,7 @@ else:
                         "Title": meta.title,
                         "Matching (pos1, pos2) pairs": str(pairs),
                     })
+                # renders one row per document satisfying the WITHIN/k proximity constraint
                 st.dataframe(rows, use_container_width=True, hide_index=True)
                 st.info(
                     "**Evidence of positional matching:** each (pos1, pos2) pair "
